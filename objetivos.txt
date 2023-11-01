@@ -1,0 +1,9 @@
+passos iniciais
+    
+o que o usuario será capaz de fazer?
+    -adicionar alunos,notas
+    -remover alunos,notas
+    -editar alunos,notas
+        -editar notas atraves do nome das provas (ex: p1) e do nome do aluno.
+    -calcular as medias de cada alunos
+    -printar as informções em formato de tabela
