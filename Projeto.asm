@@ -11,6 +11,8 @@
     notas_p2  db 5 dup(?)
     notas_p3  db 5 dup(?)
 
+    n_cad   dw 0
+
     medias  db 5 dup(?)
 
     menu    db 'Selecione a ação desejada:'
@@ -25,7 +27,7 @@
     cadastro_insert db 'Diga o nome do aluno:$'
 
     del_msg db 'Insira o nome do aluno que sera deletado: '
-    delet_vet db 30 dup
+    ;delet_vet db 30 dup
     
 .code
 main PROC
@@ -58,6 +60,8 @@ main PROC
     jmp @INVALID
 
     cad:
+        call cadastro
+        call planilha
         call cadastro
         call planilha
         jmp encerra_prog
@@ -107,9 +111,15 @@ cadastro PROC
     lea dx, cadastro_insert
     int 21h
     
-    mov ah,01
     mov cx,30
-    xor bx,bx
+    
+    mov ax,30
+    mov bx,n_cad
+    mul bx
+
+    mov bx,ax
+    mov ah,01
+
     @while:
         int 21h
         cmp al,13
@@ -124,7 +134,11 @@ cadastro PROC
 
     loop @while
 
+
+
     fora:
+
+    add n_cad,1
 
     pop ax
     pop bx
@@ -211,6 +225,9 @@ planilha PROC
 
     lea dx, alunos
     mov ah,09
+    int 21h
+
+    add dx,30
     int 21h
 
 
