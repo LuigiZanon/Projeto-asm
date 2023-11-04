@@ -26,6 +26,10 @@
 
     cadastro_insert db 'Diga o nome do aluno:$'
 
+    notas_p1_insert db 'Diga a nota da p1: $'
+    notas_p2_insert db 'Diga a nota da p2: $'
+    notas_p3_insert db 'Diga a nota da p3: $'
+
     del_msg db 'Insira o nome do aluno que sera deletado: '
     ;delet_vet db 30 dup
     
@@ -111,32 +115,37 @@ cadastro PROC
     lea dx, cadastro_insert
     int 21h
     
-    mov cx,30
+    mov cx,30                   ;num maximo de caracteres que o nome pode ter +1 (max 29)
     
     mov ax,30
-    mov bx,n_cad
-    mul bx
+    mul n_cad
 
     mov bx,ax
     mov ah,01
 
     @while:
         int 21h
-        cmp al,13
-        jne diferente
-
-        mov alunos[bx] , '$'
-        jmp fora
+        cmp al,13                                   ;al,13?
+        jne diferente                               ;nao, pula para 'diferente' e move o caracter em al 
+                                                    ;sim, coloca $ no final do nome digitado e pula para fora do @While
+        mov alunos[bx] , '$'                        ;
+        jmp fora                                    ;
 
         diferente:
         mov alunos[bx],al
         inc bx
-
     loop @while
 
-
-
     fora:
+    mov ah,09
+    lea dx, notas_p1_insert
+    int 21h
+
+    mov ah,01
+    int 21h
+    
+    
+
 
     add n_cad,1
 
@@ -146,7 +155,6 @@ cadastro PROC
 
     ret
 cadastro ENDP
-
 
 editt PROC
 ;procedimento que edita o cadastro
