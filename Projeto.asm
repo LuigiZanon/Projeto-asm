@@ -137,15 +137,37 @@ cadastro PROC
     loop @while
 
     fora:
+    mov bx,n_cad
+
     mov ah,09
     lea dx, notas_p1_insert
     int 21h
 
     mov ah,01
     int 21h
+    sub al,30h
     
-    
+    mov notas_p1[bx],al
 
+    mov ah,09
+    lea dx, notas_p2_insert
+    int 21h
+
+    mov ah,01
+    int 21h
+    sub al,30h
+
+    mov notas_p2[bx],al
+
+    mov ah,09
+    lea dx, notas_p3_insert
+    int 21h
+
+    mov ah,01
+    int 21h
+    sub al,30h
+
+    mov notas_p3[bx],al
 
     add n_cad,1
 
@@ -237,7 +259,6 @@ planilha PROC
 
     add dx,30
     int 21h
-
 
     pop cx
     pop bx
