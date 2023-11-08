@@ -45,6 +45,8 @@ main PROC
 
     mov ah,01
 @INVALID:
+    call pulalinha
+    
     int 21h
 
     cmp al,'1'
@@ -65,10 +67,7 @@ main PROC
 
     cad:
         call cadastro
-        call planilha
-        call cadastro
-        call planilha
-        jmp encerra_prog
+        jmp @MENU
 
     del:
         call delete
@@ -138,6 +137,7 @@ cadastro PROC
 
     fora:
     mov bx,n_cad
+    dec bx
 
     mov ah,09
     lea dx, notas_p1_insert
@@ -149,6 +149,8 @@ cadastro PROC
     
     mov notas_p1[bx],al
 
+    call pulalinha
+
     mov ah,09
     lea dx, notas_p2_insert
     int 21h
@@ -158,6 +160,8 @@ cadastro PROC
     sub al,30h
 
     mov notas_p2[bx],al
+
+    call pulalinha
 
     mov ah,09
     lea dx, notas_p3_insert
@@ -253,12 +257,6 @@ planilha PROC
     push bx
     push cx
 
-    lea dx, alunos
-    mov ah,09
-    int 21h
-
-    add dx,30
-    int 21h
 
     pop cx
     pop bx
