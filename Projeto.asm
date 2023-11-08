@@ -24,7 +24,7 @@
 
     pula_linha  db 10,13,'$'
 
-    cadastro_insert db 'Diga o nome do aluno:$'
+    cadastro_insert db 'Diga o nome do aluno (max 29 caracteres):$'
 
     notas_p1_insert db 'Diga a nota da p1: $'
     notas_p2_insert db 'Diga a nota da p2: $'
@@ -134,6 +134,8 @@ cadastro PROC
         mov alunos[bx],al
         inc bx
     loop @while
+
+    mov alunos[bx] , '$'
 
     fora:
     mov bx,n_cad
