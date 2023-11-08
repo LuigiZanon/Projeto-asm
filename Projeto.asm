@@ -24,7 +24,7 @@
 
     pula_linha  db 10,13,'$'
 
-    cadastro_insert db 'Diga o nome do aluno:$'
+    cadastro_insert db 'Diga o nome do aluno (max 29 caracteres):$'
 
     notas_p1_insert db 'Diga a nota da p1: $'
     notas_p2_insert db 'Diga a nota da p2: $'
@@ -114,10 +114,10 @@ cadastro PROC
     lea dx, cadastro_insert
     int 21h
     
-    mov cx,30                   ;num maximo de caracteres que o nome pode ter +1 (max 29)
+    mov cx,30                   ;número maximo de caracteres que o nome pode ter +1 (max 29)
     
-    mov ax,30
-    mul n_cad
+    mul n_cad                   ;multipla a quantidade de nomes cadastrados por 30 (num de colunas na matriz nomes) para não sobreescrever os nomes ja cadastrados
+    mov ax,30                   ;
 
     mov bx,ax
     mov ah,01
@@ -135,7 +135,7 @@ cadastro PROC
         inc bx
     loop @while
 
-    mov alunos[bx], '$'
+    mov alunos[bx] , '$'
 
     fora:
     mov bx,n_cad
