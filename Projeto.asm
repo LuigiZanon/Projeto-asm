@@ -15,7 +15,7 @@
 
     medias  db 5 dup(?)
 
-    menu    db 'Selecione a ação desejada:'
+    menu    db 10,13,'Selecione a ação desejada:'
             db 10,13,'[1]- CADASTRAR um aluno'
             db 10,13,'[2]- EXCLUIR um aluno'
             db 10,13,'[3]- CORRIGIR uma nota'
@@ -78,7 +78,7 @@ main PROC
         jmp @MENU
 
     plani:
-        call planilha
+        call print_nomes
         jmp @MENU
 
         
@@ -264,5 +264,30 @@ planilha PROC
 
     ret
 planilha ENDP
+print_nomes PROC
+;printa todos os nomes cadastrados com 10,13
 
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov cx,n_cad
+
+    mov ah,09
+    lea dx, alunos
+
+    @for:
+        call pulalinha
+        int 21h
+        add dx,30
+    loop @for
+
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+print_nomes ENDP
 end main
