@@ -135,9 +135,10 @@ cadastro PROC
         inc bx
     loop @while
 
+    mov alunos[bx], '$'
+
     fora:
     mov bx,n_cad
-    dec bx
 
     mov ah,09
     lea dx, notas_p1_insert
