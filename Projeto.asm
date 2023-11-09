@@ -116,8 +116,8 @@ cadastro PROC
     
     mov cx,30                   ;número maximo de caracteres que o nome pode ter +1 (max 29)
     
-    mul n_cad                   ;multipla a quantidade de nomes cadastrados por 30 (num de colunas na matriz nomes) para não sobreescrever os nomes ja cadastrados
     mov ax,30                   ;
+    mul n_cad                   ;multipla a quantidade de nomes cadastrados por 30 (num de colunas na matriz nomes) para não sobreescrever os nomes ja cadastrados
 
     mov bx,ax
     mov ah,01
