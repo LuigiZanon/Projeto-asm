@@ -30,8 +30,13 @@
     notas_p2_insert db 'Diga a nota da p2: $'
     notas_p3_insert db 'Diga a nota da p3: $'
 
-    del_msg db 'Insira o nome do aluno que sera deletado: '
+    del_msg db 'Insira o nome do aluno que sera deletado: $'
     ;delet_vet db 30 dup
+
+    busca_msg   db 'Insira o nome para busca: $'
+    str_busca   db 30 dup("$")
+    n_busca     db 0
+    indice_busc dw 0
     
 .code
 main PROC
@@ -175,9 +180,9 @@ cadastro PROC
 
     add n_cad,1
 
-    pop ax
-    pop bx
     pop cx
+    pop bx
+    pop ax
 
     ret
 cadastro ENDP
@@ -190,9 +195,9 @@ editt PROC
 
     
 
-    pop ax
-    pop bx
     pop cx
+    pop bx
+    pop ax
 
     ret
 editt ENDP
@@ -206,9 +211,9 @@ edit_nome PROC
 
     
 
-    pop ax
-    pop bx
     pop cx
+    pop bx
+    pop ax
 
     ret
 edit_nome ENDP
@@ -222,9 +227,9 @@ edit_nota PROC
 
     
 
-    pop ax
-    pop bx
     pop cx
+    pop bx
+    pop ax
 
     ret
 edit_nota ENDP
@@ -240,12 +245,14 @@ delete PROC
     lea dx,del_msg
     int 21h
 
+    call busca
+
     
     
 
     pop cx
     pop bx
-    pop cx
+    pop ax
 
     ret
 delete ENDP
@@ -260,9 +267,76 @@ planilha PROC
 
     pop cx
     pop bx
-    pop cx
+    pop ax
 
     ret
 planilha ENDP
+
+busca PROC
+;procedimento que exibe a planilha com os dados
+    push ax
+    push bx
+    push cx
+
+    ; lea dx,busca_msg
+    ; mov ah,09
+    ; int 21h
+
+    xor dx,dx
+    xor bx,bx
+    mov cx,30
+    mov ah,01
+
+@busca_while:
+    int 21h
+    cmp al, 13
+    je @busc_sai
+    mov str_busca[bx],al
+    inc dx
+    loop @busca_while
+
+@busc_sai:
+    xor bx,bx
+
+@busc_cmp:
+    mov ax,30
+    mul indice_busc
+
+    mov bx,ax
+
+    mov cx, dx              ;cx com numero de caracteres
+    mov dx, n_cad           ;dx com o numero de cadastros
+    lea si, alunos[bx]
+    lea di, str_busca
+
+    rep cmpsb
+    je @igual
+
+
+
+    inc indice_busc
+
+    cmp indice_busc,dx
+    je @busc_cmp
+    
+    mov indice_busc, 0
+
+    jmp @sai_cmp
+
+@igual:
+    mov ah,09
+    mov dl,'Y'
+    int 21h
+
+
+@sai_cmp:
+
+
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+busca ENDP
 
 end main
