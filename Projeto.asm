@@ -297,22 +297,24 @@ busca PROC
 
 @busc_sai:
     xor bx,bx
-
+    push dx
 @busc_cmp:
     mov ax,30
     mul indice_busc
 
     mov bx,ax
 
-    mov cx, dx              ;cx com numero de caracteres
+    pop cx                  ;cx com numero de caracteres
     mov dx, n_cad           ;dx com o numero de cadastros
     lea si, alunos[bx]
     lea di, str_busca
 
-    rep cmpsb
+    repe cmpsb
     je @igual
 
-
+    mov ah,02
+    mov dl,'N'
+    int 21h
 
     inc indice_busc
 
@@ -321,10 +323,12 @@ busca PROC
     
     mov indice_busc, 0
 
+
+
     jmp @sai_cmp
 
 @igual:
-    mov ah,09
+    mov ah,02
     mov dl,'Y'
     int 21h
 
