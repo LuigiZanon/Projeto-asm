@@ -133,10 +133,12 @@ cadastro PROC
 
         inc cx
         dec bx
+        jmp @while
 
         diferente:
         mov alunos[bx],al
         inc bx
+        back:
     loop @while
 
     fora:
