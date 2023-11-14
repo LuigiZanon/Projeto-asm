@@ -1,11 +1,11 @@
 .model small
 .stack 100h
 .data
-    alunos  db 30 dup(?)
-            db 30 dup(?)
-            db 30 dup(?)
-            db 30 dup(?)
-            db 30 dup(?)
+    alunos  db 29 dup(' '),'$'
+            db 29 dup(' '),'$'
+            db 29 dup(' '),'$'
+            db 29 dup(' '),'$'
+            db 29 dup(' '),'$'
 
     notas_p1  db 5 dup(?)
     notas_p2  db 5 dup(?)
@@ -126,16 +126,18 @@ cadastro PROC
         int 21h
         cmp al,13                                   ;al,13?
         jne diferente                               ;nao, pula para 'diferente' e move o caracter em al 
-                                                    ;sim, coloca $ no final do nome digitado e pula para fora do @While
-        mov alunos[bx] , '$'                        ;
-        jmp fora                                    ;
+        jmp fora                                    ;sim, coloca $ no final do nome digitado e pula para fora do @While
+
+        cmp al,08h
+        jne diferente
+
+        inc cx
+        dec bx
 
         diferente:
         mov alunos[bx],al
         inc bx
     loop @while
-
-    mov alunos[bx] , '$'
 
     fora:
     mov bx,n_cad
