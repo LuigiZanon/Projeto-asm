@@ -10,10 +10,9 @@
     notas_p1  db 5 dup(?)
     notas_p2  db 5 dup(?)
     notas_p3  db 5 dup(?)
+    medias  db 5 dup(?)
 
     n_cad   dw 0
-
-    medias  db 5 dup(?)
 
     menu    db 10,13,'Selecione a ação desejada:'
             db 10,13,'[1]- CADASTRAR um aluno'
@@ -30,9 +29,11 @@
     notas_p2_insert db 'Diga a nota da p2: $'
     notas_p3_insert db 'Diga a nota da p3: $'
 
-    del_msg db 'Insira o nome do aluno que sera deletado: '
-    ;delet_vet db 30 dup
+    del_msg db 'Insira o nome do aluno que sera deletado: '                 ;delet_vet db 30 dup
     
+    planilha_msg db 'Nome do aluno                 P1 P2 P3 media$'
+
+
 .code
 main PROC
     mov ax,@data
@@ -125,8 +126,7 @@ cadastro PROC
     @while:
         int 21h
         cmp al,13                                   ;al,13?
-        jne diferente                               ;nao, pula para 'diferente' e move o caracter em al 
-        jmp fora                                    ;sim, coloca $ no final do nome digitado e pula para fora do @While
+        je fora                                     ;sim, pula para 'fora'
 
         cmp al,08h
         jne diferente
@@ -138,33 +138,44 @@ cadastro PROC
         diferente:
         mov alunos[bx],al
         inc bx
-        back:
     loop @while
 
     fora:
-    mov bx,n_cad
+    mov di,n_cad
 
     mov ah,09
     lea dx, notas_p1_insert
     int 21h
 
-    mov ah,01
-    int 21h
-    sub al,30h
-    
-    mov notas_p1[bx],al
+    xor dx,dx
+    mov cx,2
 
+    @for1:
+        mov ah,01
+        int 21h
+        sub al,30h
+        add dl,al
+    loop @for1
+    
+    mov notas_p1[di],dl
+    
     call pulalinha
 
     mov ah,09
     lea dx, notas_p2_insert
     int 21h
 
-    mov ah,01
-    int 21h
-    sub al,30h
+    xor dx,dx
+    mov cx,2
 
-    mov notas_p2[bx],al
+    @for2:
+        mov ah,01
+        int 21h
+        sub al,30h
+        add dl,al
+    loop @for2
+
+    mov notas_p2[di],dl
 
     call pulalinha
 
@@ -172,11 +183,26 @@ cadastro PROC
     lea dx, notas_p3_insert
     int 21h
 
-    mov ah,01
-    int 21h
-    sub al,30h
+    xor dx,dx
+    mov cx,2
 
-    mov notas_p3[bx],al
+    @for3:
+        mov ah,01
+        int 21h
+        sub al,30h
+        add dl,al
+    loop @for3
+
+    mov notas_p3[di],dl
+
+    xor ax,ax
+    mov al,notas_p1[di]
+    add al,notas_p2[di]
+    add al,notas_p3[di]
+    xor bx,bx
+    mov bl,3
+    div bl
+    mov medias[di],al
 
     add n_cad,1
 
@@ -277,16 +303,88 @@ print_nomes PROC
     push cx
     push dx
 
+    call pulalinha
+
+    mov ah,09
+    lea dx,planilha_msg
+    int 21h
+
     mov cx,n_cad
 
     mov ah,09
     lea dx, alunos
+    xor bx,bx
+    mov si,10
 
     @for:
         call pulalinha
         int 21h
         add dx,30
-    loop @for
+        push dx
+        push cx
+
+        xor ax,ax
+        mov al,notas_p1[bx]
+        mov cx,2
+        @loop1:
+            div si
+            push dx
+        loop @loop1
+
+        mov ah,02
+        mov cx,2
+        
+        @print:
+            pop dx
+            add dl,30h
+            int 21h
+        loop @print
+
+        mov dl,20h
+        int 21h
+
+        xor ax,ax
+        mov al,notas_p2[bx]
+        mov cx,2
+        @loop2:
+            div si
+            push dx
+        loop @loop2
+
+        mov ah,02
+        mov cx,2
+        
+        @print2:
+            pop dx
+            add dl,30h
+            int 21h
+        loop @print2
+
+        mov dl,20h
+        int 21h
+
+        xor ax,ax
+        mov al,notas_p3[bx]
+        mov cx,2
+        @loop3:
+            div si
+            push dx
+        loop @loop3
+
+        mov ah,02
+        mov cx,2
+        @print3:
+            pop dx
+            add dl,30h
+            int 21h
+        loop @print3
+        mov dl,20h
+        int 21h
+
+        inc bx
+        pop cx
+        pop dx
+    loop @for   
 
     pop dx
     pop cx
