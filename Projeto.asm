@@ -31,7 +31,7 @@
 
     del_msg db 'Insira o nome do aluno que sera deletado: '                 ;delet_vet db 30 dup
     
-    planilha_msg db 'Nome do aluno                 P1 P2 P3 media$'
+    planilha_msg db 'Nome do aluno                P1 P2 P3 media$'
 
 
 .code
@@ -110,6 +110,9 @@ cadastro PROC
     push ax
     push bx
     push cx
+
+    cmp n_cad,5
+    jg
 
     mov ah,09
     lea dx, cadastro_insert
@@ -314,7 +317,6 @@ print_nomes PROC
     mov ah,09
     lea dx, alunos
     xor bx,bx
-    mov si,10
 
     @for:
         call pulalinha
@@ -322,18 +324,37 @@ print_nomes PROC
         add dx,30
         push dx
         push cx
+        push ax
 
+        call print_notas
+        
+        inc bx
+        pop ax
+        pop cx
+        pop dx
+    loop @for   
+
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+print_nomes ENDP
+print_notas proc
+
+        mov si,10
         xor ax,ax
         mov al,notas_p1[bx]
         mov cx,2
         @loop1:
+            xor dx,dx
             div si
             push dx
         loop @loop1
 
         mov ah,02
         mov cx,2
-        
         @print:
             pop dx
             add dl,30h
@@ -347,13 +368,13 @@ print_nomes PROC
         mov al,notas_p2[bx]
         mov cx,2
         @loop2:
+            xor dx,dx
             div si
             push dx
         loop @loop2
 
         mov ah,02
         mov cx,2
-        
         @print2:
             pop dx
             add dl,30h
@@ -367,6 +388,7 @@ print_nomes PROC
         mov al,notas_p3[bx]
         mov cx,2
         @loop3:
+            xor dx,dx
             div si
             push dx
         loop @loop3
@@ -381,16 +403,23 @@ print_nomes PROC
         mov dl,20h
         int 21h
 
-        inc bx
-        pop cx
-        pop dx
-    loop @for   
+        xor ax,ax
+        mov al,medias[bx]
+        mov cx,2
+        @loop4:
+            xor dx,dx
+            div si
+            push dx
+        loop @loop4
 
-    pop dx
-    pop cx
-    pop bx
-    pop ax
+        mov ah,02
+        mov cx,2
+        @print4:
+            pop dx
+            add dl,30h
+            int 21h
+        loop @print4
 
-    ret
-print_nomes ENDP
+        ret
+print_notas endp
 end main
