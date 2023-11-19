@@ -29,9 +29,11 @@
     notas_p2_insert db 'Diga a nota da p2: $'
     notas_p3_insert db 'Diga a nota da p3: $'
 
-    del_msg db 'Insira o nome do aluno que sera deletado: '                 ;delet_vet db 30 dup
+    del_msg db 'Insira o nome do aluno que sera deletado: $'                 ;delet_vet db 30 dup
     
     planilha_msg db 'Nome do aluno                P1 P2 P3 media$'
+
+    erro db 'Nao eh possivel realizar outro cadastro pois ja ha 5 cadastros $'
 
 
 .code
@@ -112,8 +114,15 @@ cadastro PROC
     push cx
 
     cmp n_cad,5
-    jg
+    jnge @cad
 
+    mov ah,09
+    lea dx,erro
+    int 21h
+
+    jmp retorna
+
+    @cad:
     mov ah,09
     lea dx, cadastro_insert
     int 21h
@@ -209,6 +218,7 @@ cadastro PROC
 
     add n_cad,1
 
+    retorna:
     pop ax
     pop bx
     pop cx
@@ -284,20 +294,6 @@ delete PROC
     ret
 delete ENDP
 
-
-planilha PROC
-;procedimento que exibe a planilha com os dados
-    push ax
-    push bx
-    push cx
-
-
-    pop cx
-    pop bx
-    pop cx
-
-    ret
-planilha ENDP
 print_nomes PROC
 ;printa todos os nomes cadastrados com 10,13
 
