@@ -368,6 +368,7 @@ print_notas proc
         xor ax,ax
         mov al,notas_p1[bx]
         mov cx,2
+
         @loop1:
             xor dx,dx
             div si
@@ -376,6 +377,7 @@ print_notas proc
 
         mov ah,02
         mov cx,2
+
         @print:
             pop dx
             add dl,30h
@@ -388,6 +390,7 @@ print_notas proc
         xor ax,ax
         mov al,notas_p2[bx]
         mov cx,2
+
         @loop2:
             xor dx,dx
             div si
@@ -396,6 +399,7 @@ print_notas proc
 
         mov ah,02
         mov cx,2
+
         @print2:
             pop dx
             add dl,30h
@@ -408,6 +412,7 @@ print_notas proc
         xor ax,ax
         mov al,notas_p3[bx]
         mov cx,2
+
         @loop3:
             xor dx,dx
             div si
@@ -416,6 +421,7 @@ print_notas proc
 
         mov ah,02
         mov cx,2
+
         @print3:
             pop dx
             add dl,30h
@@ -427,6 +433,7 @@ print_notas proc
         xor ax,ax
         mov al,medias[bx]
         mov cx,2
+
         @loop4:
             xor dx,dx
             div si
@@ -435,6 +442,7 @@ print_notas proc
 
         mov ah,02
         mov cx,2
+        
         @print4:
             pop dx
             add dl,30h
