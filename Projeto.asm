@@ -153,24 +153,28 @@ cadastro PROC
     loop @while
 
     fora:
+    xor bx,bx
     mov di,n_cad
 
     mov ah,09
     lea dx, notas_p1_insert
     int 21h
 
-    xor dx,dx
     mov cx,2
 
     @for1:
         mov ah,01
         int 21h
         sub al,30h
-
-        add dl,al
+        xor ah,ah
+        push ax
+        mov ax,10
+        mul bx
+        pop bx
+        add bl,al
     loop @for1
     
-    mov notas_p1[di],dl
+    mov notas_p1[di],bl
     
     call pulalinha
 
@@ -178,17 +182,22 @@ cadastro PROC
     lea dx, notas_p2_insert
     int 21h
 
-    xor dx,dx
+    xor bx,bx
     mov cx,2
 
     @for2:
         mov ah,01
         int 21h
         sub al,30h
-        add dl,al
+        xor ah,ah
+        push ax
+        mov ax,10
+        mul bx
+        pop bx
+        add bl,al
     loop @for2
 
-    mov notas_p2[di],dl
+    mov notas_p2[di],bl
 
     call pulalinha
 
@@ -196,17 +205,22 @@ cadastro PROC
     lea dx, notas_p3_insert
     int 21h
 
-    xor dx,dx
+    xor bx,bx
     mov cx,2
 
     @for3:
         mov ah,01
         int 21h
         sub al,30h
-        add dl,al
+        xor ah,ah
+        push ax
+        mov ax,10
+        mul bx
+        pop bx
+        add bl,al
     loop @for3
 
-    mov notas_p3[di],dl
+    mov notas_p3[di],bl
 
     xor ax,ax
     mov al,notas_p1[di]
