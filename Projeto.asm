@@ -166,6 +166,7 @@ cadastro PROC
         mov ah,01
         int 21h
         sub al,30h
+
         add dl,al
     loop @for1
     
