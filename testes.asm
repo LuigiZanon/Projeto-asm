@@ -22,12 +22,12 @@ volta:
 
     mov ah,02
     mov cx,5
-    
+
     CLD
     lea si,vetor
     lea di,vetor2
 
-    rep cmpsb
+    repe cmpsb
     je deu_certo
 
     mov dl,'X'

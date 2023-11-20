@@ -34,14 +34,16 @@
     ;delet_vet db 30 dup
 
     busca_msg   db 'Insira o nome para busca: $'
-    str_busca   db 30 dup("$")
+    str_busca   db 29 dup(' ')
     n_busca     db 0
     indice_busc dw 0
+
     
 .code
 main PROC
     mov ax,@data
     mov ds,ax
+    mov es,ax
 
 @MENU:
     mov ah,09
@@ -282,7 +284,7 @@ busca PROC
     ; mov ah,09
     ; int 21h
 
-    xor dx,dx
+    mov indice_busc,0
     xor bx,bx
     mov cx,30
     mov ah,01
@@ -292,25 +294,28 @@ busca PROC
     cmp al, 13
     je @busc_sai
     mov str_busca[bx],al
-    inc dx
+    inc bx
+
     loop @busca_while
 
 @busc_sai:
     xor bx,bx
-    push dx
+
 @busc_cmp:
     mov ax,30
     mul indice_busc
 
     mov bx,ax
 
-    pop cx                  ;cx com numero de caracteres
-    mov dx, n_cad           ;dx com o numero de cadastros
+    cld
+    mov cx,29                            ;cx com numero de caracteres
+    mov dx, n_cad                        ;dx com o numero de cadastros
+
     lea si, alunos[bx]
     lea di, str_busca
-
+ 
     repe cmpsb
-    je @igual
+    jz @igual
 
     mov ah,02
     mov dl,'N'
@@ -318,18 +323,16 @@ busca PROC
 
     inc indice_busc
 
+    mov dx,n_cad
     cmp indice_busc,dx
-    je @busc_cmp
+    jne @busc_cmp
     
-    mov indice_busc, 0
-
-
-
     jmp @sai_cmp
 
 @igual:
     mov ah,02
-    mov dl,'Y'
+    mov dx,indice_busc
+    add dx,30h
     int 21h
 
 
