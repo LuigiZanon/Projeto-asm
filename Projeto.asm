@@ -329,8 +329,7 @@ delete PROC
     call busca
 
     mov ah,30
-    mov 
-    mov 
+    
     
 
     pop cx
