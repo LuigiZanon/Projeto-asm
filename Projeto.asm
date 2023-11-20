@@ -14,7 +14,7 @@
 
     n_cad   dw 0
 
-    menu    db 10,13,'Selecione a ação desejada:'
+    menu    db 10,13,'Selecione a opcao desejada:'
             db 10,13,'[1]- CADASTRAR um aluno'
             db 10,13,'[2]- EXCLUIR um aluno'
             db 10,13,'[3]- CORRIGIR um cadastro'
@@ -35,14 +35,17 @@
     busca_msg   db 'Insira o nome para busca: $'
     str_busca   db 29 dup(' ')
     indice_busc dw 0
+    erro_busca  db 'Cadastro nao encontrado! $'
     
     planilha_msg db 'Nome do aluno                P1 P2 P3 media$'
 
     erro db 'Nao eh possivel realizar outro cadastro pois ja ha 5 cadastros $'
 
-    edit_msg    db 'O que você deseja editar?'
+    edit_msg    db 10,13, 'O que voce deseja editar?'
                 db 10,13,'[1] Nota'
                 db 10,13,'[2] Nome $'
+    edit_nome_msg   db 10,13,'Qual nome voce deseja editar? $'
+    edit_erro db 'Nao ha cadastros! $'
 
 
 .code
@@ -258,21 +261,50 @@ editt PROC
     push bx
     push cx
 
-    lea dl,edit_msg
+    lea dx,edit_msg
     mov ah,09
     
+
+    ; cmp n_cad, 0
+    ; jne @valida_edit
+
+    ; mov ah,09
+    ; lea dx,edit_erro
+    ; int 21h
+
+    jmp @sai_edit
+
+    int 21h
+    mov ah,01
+
 @valida_edit:
     int 21h
 
-    mov ah,01
-    int 21h
-
     cmp al, '1'
-    je @nome
+    je @nota
 
     cmp al, '2'
-    je @nota
+    je @nome
     jmp @valida_edit
+
+
+@nota:
+
+    call edit_nota
+    jmp @sai_edit
+
+@nome:
+    lea dx,edit_nome_msg
+    mov ah,09
+    int 21h
+
+    call busca
+    cmp dx,1
+    jne @nome
+
+    call edit_nome
+
+@sai_edit:
 
     
 
@@ -290,7 +322,34 @@ edit_nome PROC
     push bx
     push cx
 
-    
+    mov bx,indice_busc
+    mov ax,30
+
+    mul bx
+
+    mov si,ax
+    mov cx,29
+    push si
+
+@zera_nome:
+    mov alunos[si], ' '
+    inc si
+    loop @zera_nome
+
+    pop si
+    mov ah,01
+    mov cx,29
+
+@edita_nome:
+    int 21h
+    cmp al,13
+    je @sai_nome
+
+    mov alunos[si],al
+    inc si
+    loop @edita_nome
+
+@sai_nome:
 
     pop cx
     pop bx
@@ -508,10 +567,16 @@ busca PROC
     cmp indice_busc,dx
     jne @busc_cmp
     
+    lea dx, erro_busca
+    mov ah,09
+    int 21h
+
+    xor dx,dx
+
     jmp @sai_cmp
 
 @igual:
-    mov dx,indice_busc
+    mov dx,1
 
 @sai_cmp:
     xor bx,bx
@@ -520,7 +585,7 @@ busca PROC
 @zerabusca:
     mov str_busca[bx],' '
     inc bx
-loop @zerabusca
+    loop @zerabusca
 
     pop cx
     pop bx
