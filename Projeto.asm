@@ -1,21 +1,20 @@
 .model small
 .stack 100h
 .data
-    alunos  db 30 dup(?)
-            db 30 dup(?)
-            db 30 dup(?)
-            db 30 dup(?)
-            db 30 dup(?)
+    alunos  db 29 dup(' '),'$'
+            db 29 dup(' '),'$'
+            db 29 dup(' '),'$'
+            db 29 dup(' '),'$'
+            db 29 dup(' '),'$'
 
     notas_p1  db 5 dup(?)
     notas_p2  db 5 dup(?)
     notas_p3  db 5 dup(?)
+    medias  db 5 dup(?)
 
     n_cad   dw 0
 
-    medias  db 5 dup(?)
-
-    menu    db 'Selecione a ação desejada:'
+    menu    db 10,13,'Selecione a ação desejada:'
             db 10,13,'[1]- CADASTRAR um aluno'
             db 10,13,'[2]- EXCLUIR um aluno'
             db 10,13,'[3]- CORRIGIR uma nota'
@@ -24,7 +23,7 @@
 
     pula_linha  db 10,13,'$'
 
-    cadastro_insert db 'Diga o nome do aluno:$'
+    cadastro_insert db 'Diga o nome do aluno (max 29 caracteres):$'
 
     notas_p1_insert db 'Diga a nota da p1: $'
     notas_p2_insert db 'Diga a nota da p2: $'
@@ -37,8 +36,12 @@
     str_busca   db 29 dup(' ')
     n_busca     db 0
     indice_busc dw 0
-
     
+    planilha_msg db 'Nome do aluno                P1 P2 P3 media$'
+
+    erro db 'Nao eh possivel realizar outro cadastro pois ja ha 5 cadastros $'
+
+
 .code
 main PROC
     mov ax,@data
@@ -85,7 +88,7 @@ main PROC
         jmp @MENU
 
     plani:
-        call planilha
+        call print_nomes
         jmp @MENU
 
         
@@ -117,14 +120,24 @@ cadastro PROC
     push bx
     push cx
 
+    cmp n_cad,5
+    jnge @cad
+
+    mov ah,09
+    lea dx,erro
+    int 21h
+
+    jmp retorna
+
+    @cad:
     mov ah,09
     lea dx, cadastro_insert
     int 21h
     
-    mov cx,30                   ;num maximo de caracteres que o nome pode ter +1 (max 29)
+    mov cx,30                   ;número maximo de caracteres que o nome pode ter +1 (max 29)
     
-    mov ax,30
-    mul n_cad
+    mov ax,30                   ;
+    mul n_cad                   ;multipla a quantidade de nomes cadastrados por 30 (num de colunas na matriz nomes) para não sobreescrever os nomes ja cadastrados
 
     mov bx,ax
     mov ah,01
@@ -132,10 +145,14 @@ cadastro PROC
     @while:
         int 21h
         cmp al,13                                   ;al,13?
-        jne diferente                               ;nao, pula para 'diferente' e move o caracter em al 
-                                                    ;sim, coloca $ no final do nome digitado e pula para fora do @While
-        mov alunos[bx] , '$'                        ;
-        jmp fora                                    ;
+        je fora                                     ;sim, pula para 'fora'
+
+        cmp al,08h
+        jne diferente
+
+        inc cx
+        dec bx
+        jmp @while
 
         diferente:
         mov alunos[bx],al
@@ -143,30 +160,51 @@ cadastro PROC
     loop @while
 
     fora:
-    mov bx,n_cad
-    dec bx
+    xor bx,bx
+    mov di,n_cad
 
     mov ah,09
     lea dx, notas_p1_insert
     int 21h
 
-    mov ah,01
-    int 21h
-    sub al,30h
-    
-    mov notas_p1[bx],al
+    mov cx,2
 
+    @for1:
+        mov ah,01
+        int 21h
+        sub al,30h
+        xor ah,ah
+        push ax
+        mov ax,10
+        mul bx
+        pop bx
+        add bl,al
+    loop @for1
+    
+    mov notas_p1[di],bl
+    
     call pulalinha
 
     mov ah,09
     lea dx, notas_p2_insert
     int 21h
 
-    mov ah,01
-    int 21h
-    sub al,30h
+    xor bx,bx
+    mov cx,2
 
-    mov notas_p2[bx],al
+    @for2:
+        mov ah,01
+        int 21h
+        sub al,30h
+        xor ah,ah
+        push ax
+        mov ax,10
+        mul bx
+        pop bx
+        add bl,al
+    loop @for2
+
+    mov notas_p2[di],bl
 
     call pulalinha
 
@@ -174,17 +212,39 @@ cadastro PROC
     lea dx, notas_p3_insert
     int 21h
 
-    mov ah,01
-    int 21h
-    sub al,30h
+    xor bx,bx
+    mov cx,2
 
-    mov notas_p3[bx],al
+    @for3:
+        mov ah,01
+        int 21h
+        sub al,30h
+        xor ah,ah
+        push ax
+        mov ax,10
+        mul bx
+        pop bx
+        add bl,al
+    loop @for3
+
+    mov notas_p3[di],bl
+
+    xor ax,ax
+    mov al,notas_p1[di]
+    add al,notas_p2[di]
+    add al,notas_p3[di]
+    xor bx,bx
+    mov bl,3
+    div bl
+    mov medias[di],al
 
     add n_cad,1
 
-    pop cx
-    pop bx
+
+    retorna:
     pop ax
+    pop bx
+    pop cx
 
     ret
 cadastro ENDP
@@ -259,20 +319,130 @@ delete PROC
     ret
 delete ENDP
 
+print_nomes PROC
+;printa todos os nomes cadastrados com 10,13
 
-planilha PROC
-;procedimento que exibe a planilha com os dados
     push ax
     push bx
     push cx
+    push dx
 
+    call pulalinha
 
+    mov ah,09
+    lea dx,planilha_msg
+    int 21h
+
+    mov cx,n_cad
+
+    mov ah,09
+    lea dx, alunos
+    xor bx,bx
+
+    @for:
+        call pulalinha
+        int 21h
+        add dx,30
+        push dx
+        push cx
+        push ax
+
+        call print_notas
+        
+        inc bx
+        pop ax
+        pop cx
+        pop dx
+    loop @for   
+
+    pop dx
     pop cx
     pop bx
     pop ax
 
     ret
-planilha ENDP
+print_nomes ENDP
+print_notas proc
+
+        mov si,10
+        xor ax,ax
+        mov al,notas_p1[bx]
+        mov cx,2
+        @loop1:
+            xor dx,dx
+            div si
+            push dx
+        loop @loop1
+
+        mov ah,02
+        mov cx,2
+        @print:
+            pop dx
+            add dl,30h
+            int 21h
+        loop @print
+
+        mov dl,20h
+        int 21h
+
+        xor ax,ax
+        mov al,notas_p2[bx]
+        mov cx,2
+        @loop2:
+            xor dx,dx
+            div si
+            push dx
+        loop @loop2
+
+        mov ah,02
+        mov cx,2
+        @print2:
+            pop dx
+            add dl,30h
+            int 21h
+        loop @print2
+
+        mov dl,20h
+        int 21h
+
+        xor ax,ax
+        mov al,notas_p3[bx]
+        mov cx,2
+        @loop3:
+            xor dx,dx
+            div si
+            push dx
+        loop @loop3
+
+        mov ah,02
+        mov cx,2
+        @print3:
+            pop dx
+            add dl,30h
+            int 21h
+        loop @print3
+        mov dl,20h
+        int 21h
+
+        xor ax,ax
+        mov al,medias[bx]
+        mov cx,2
+        @loop4:
+            xor dx,dx
+            div si
+            push dx
+        loop @loop4
+
+        mov ah,02
+        mov cx,2
+        @print4:
+            pop dx
+            add dl,30h
+            int 21h
+        loop @print4
+
+        ret
+print_notas endp
 
 busca PROC
 ;procedimento que exibe a planilha com os dados
@@ -345,5 +515,4 @@ busca PROC
 
     ret
 busca ENDP
-
 end main
