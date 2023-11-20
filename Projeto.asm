@@ -16,10 +16,9 @@
 
     menu    db 10,13,'Selecione a ação desejada:'
             db 10,13,'[1]- CADASTRAR um aluno'
-            db 10,13,'[2]- EXCLUIR um aluno'
-            db 10,13,'[3]- CORRIGIR um cadastro'
-            db 10,13,'[4]- GERAR planilha'
-            db 10,13,'[5]- ENCERRA PROGRAMA $'
+            db 10,13,'[2]- CORRIGIR um cadastro'
+            db 10,13,'[3]- GERAR planilha'
+            db 10,13,'[4]- ENCERRA PROGRAMA $'
 
     pula_linha  db 10,13,'$'
 
@@ -44,6 +43,11 @@
                 db 10,13,'[1] Nota'
                 db 10,13,'[2] Nome $'
 
+    edit_provas db 'Digite qual prova voce gostariade editar'
+                db 10,13,'[1]-p1'
+                db 10,13,'[2]-p2'
+                db 10,13,'[3]-p3$'
+
 
 .code
 main PROC
@@ -66,12 +70,9 @@ main PROC
     je cad
 
     cmp al,'2'
-    je del
-
-    cmp al,'3'
     je edit
 
-    cmp al,'4'
+    cmp al,'3'
     je plani
 
     cmp al,'5'
@@ -80,10 +81,6 @@ main PROC
 
     cad:
         call cadastro
-        jmp @MENU
-
-    del:
-        call delete
         jmp @MENU
 
     edit:
@@ -258,8 +255,10 @@ editt PROC
     push bx
     push cx
 
-    lea dl,edit_msg
+    call busca
+
     mov ah,09
+    lea dx,edit_msg
     
 @valida_edit:
     int 21h
@@ -274,8 +273,15 @@ editt PROC
     je @nota
     jmp @valida_edit
 
+    @nome:
+        jmp @volta
+    @nota:
+
+        call edit_nota
+
     
 
+    @volta:
     pop cx
     pop bx
     pop ax
@@ -306,7 +312,70 @@ edit_nota PROC
     push bx
     push cx
 
+
+    mov cx,2
+    mov di,indice_busc
+
+    @p1:
+        @for_nota:
+            mov ah,01
+            int 21h
+            sub al,30h
+            xor ah,ah
+            push ax
+            mov ax,10
+            mul bx
+            pop bx
+            add bl,al
+        loop @for_nota
+        
+        mov notas_p1[di],bl
+
+        jmp @voltaProg
     
+    @p2:
+        @for_nota2:
+            mov ah,01
+            int 21h
+            sub al,30h
+            xor ah,ah
+            push ax
+            mov ax,10
+            mul bx
+            pop bx
+            add bl,al
+        loop @for_nota2
+        
+        mov notas_p2[di],bl
+
+        jmp @voltaProg
+
+    @p3:
+        @for_nota3:
+            mov ah,01
+            int 21h
+            sub al,30h
+            xor ah,ah
+            push ax
+            mov ax,10
+            mul bx
+            pop bx
+            add bl,al
+        loop @for_nota3
+        
+        mov notas_p3[di],bl
+
+        jmp @voltaProg
+    
+    @voltaProg:
+    xor ax,ax
+    mov al,notas_p1[di]
+    add al,notas_p2[di]
+    add al,notas_p3[di]
+    xor bx,bx
+    mov bl,3
+    div bl
+    mov medias[di],al
 
     pop cx
     pop bx
@@ -314,31 +383,6 @@ edit_nota PROC
 
     ret
 edit_nota ENDP
-
-
-delete PROC
-;procedimento que deleta um aluno cadastrado
-    push ax
-    push bx
-    push cx
-
-    mov ah,09
-    lea dx,del_msg
-    int 21h
-
-    call busca
-
-    mov ah,30
-    mov 
-    mov 
-    
-
-    pop cx
-    pop bx
-    pop ax
-
-    ret
-delete ENDP
 
 print_nomes PROC
 ;printa todos os nomes cadastrados com 10,13
@@ -383,6 +427,7 @@ print_nomes PROC
 
     ret
 print_nomes ENDP
+
 print_notas proc
 
         mov si,10
@@ -470,6 +515,12 @@ busca PROC
     push ax
     push bx
     push cx
+    
+    call pulalinha
+
+    mov ah,09
+    lea dx,busca_msg
+    int 21h
 
     mov indice_busc,0
     xor bx,bx
