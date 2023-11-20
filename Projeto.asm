@@ -29,7 +29,13 @@
     notas_p2_insert db 'Diga a nota da p2: $'
     notas_p3_insert db 'Diga a nota da p3: $'
 
-    del_msg db 'Insira o nome do aluno que sera deletado: $'                 ;delet_vet db 30 dup
+    del_msg db 'Insira o nome do aluno que sera deletado: $'
+    ;delet_vet db 30 dup
+
+    busca_msg   db 'Insira o nome para busca: $'
+    str_busca   db 29 dup(' ')
+    n_busca     db 0
+    indice_busc dw 0
     
     planilha_msg db 'Nome do aluno                P1 P2 P3 media$'
 
@@ -40,6 +46,7 @@
 main PROC
     mov ax,@data
     mov ds,ax
+    mov es,ax
 
 @MENU:
     mov ah,09
@@ -233,6 +240,7 @@ cadastro PROC
 
     add n_cad,1
 
+
     retorna:
     pop ax
     pop bx
@@ -249,9 +257,9 @@ editt PROC
 
     
 
-    pop ax
-    pop bx
     pop cx
+    pop bx
+    pop ax
 
     ret
 editt ENDP
@@ -265,9 +273,9 @@ edit_nome PROC
 
     
 
-    pop ax
-    pop bx
     pop cx
+    pop bx
+    pop ax
 
     ret
 edit_nome ENDP
@@ -281,9 +289,9 @@ edit_nota PROC
 
     
 
-    pop ax
-    pop bx
     pop cx
+    pop bx
+    pop ax
 
     ret
 edit_nota ENDP
@@ -299,12 +307,14 @@ delete PROC
     lea dx,del_msg
     int 21h
 
+    call busca
+
     
     
 
     pop cx
     pop bx
-    pop cx
+    pop ax
 
     ret
 delete ENDP
@@ -433,4 +443,76 @@ print_notas proc
 
         ret
 print_notas endp
+
+busca PROC
+;procedimento que exibe a planilha com os dados
+    push ax
+    push bx
+    push cx
+
+    ; lea dx,busca_msg
+    ; mov ah,09
+    ; int 21h
+
+    mov indice_busc,0
+    xor bx,bx
+    mov cx,30
+    mov ah,01
+
+@busca_while:
+    int 21h
+    cmp al, 13
+    je @busc_sai
+    mov str_busca[bx],al
+    inc bx
+
+    loop @busca_while
+
+@busc_sai:
+    xor bx,bx
+
+@busc_cmp:
+    mov ax,30
+    mul indice_busc
+
+    mov bx,ax
+
+    cld
+    mov cx,29                            ;cx com numero de caracteres
+    mov dx, n_cad                        ;dx com o numero de cadastros
+
+    lea si, alunos[bx]
+    lea di, str_busca
+ 
+    repe cmpsb
+    jz @igual
+
+    mov ah,02
+    mov dl,'N'
+    int 21h
+
+    inc indice_busc
+
+    mov dx,n_cad
+    cmp indice_busc,dx
+    jne @busc_cmp
+    
+    jmp @sai_cmp
+
+@igual:
+    mov ah,02
+    mov dx,indice_busc
+    add dx,30h
+    int 21h
+
+
+@sai_cmp:
+
+
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+busca ENDP
 end main
