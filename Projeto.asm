@@ -17,7 +17,7 @@
     menu    db 10,13,'Selecione a ação desejada:'
             db 10,13,'[1]- CADASTRAR um aluno'
             db 10,13,'[2]- EXCLUIR um aluno'
-            db 10,13,'[3]- CORRIGIR uma nota'
+            db 10,13,'[3]- CORRIGIR um cadastro'
             db 10,13,'[4]- GERAR planilha'
             db 10,13,'[5]- ENCERRA PROGRAMA $'
 
@@ -34,12 +34,15 @@
 
     busca_msg   db 'Insira o nome para busca: $'
     str_busca   db 29 dup(' ')
-    n_busca     db 0
     indice_busc dw 0
     
     planilha_msg db 'Nome do aluno                P1 P2 P3 media$'
 
     erro db 'Nao eh possivel realizar outro cadastro pois ja ha 5 cadastros $'
+
+    edit_msg    db 'O que você deseja editar?'
+                db 10,13,'[1] Nota'
+                db 10,13,'[2] Nome $'
 
 
 .code
@@ -255,6 +258,22 @@ editt PROC
     push bx
     push cx
 
+    lea dl,edit_msg
+    mov ah,09
+    
+@valida_edit:
+    int 21h
+
+    mov ah,01
+    int 21h
+
+    cmp al, '1'
+    je @nome
+
+    cmp al, '2'
+    je @nota
+    jmp @valida_edit
+
     
 
     pop cx
@@ -309,7 +328,9 @@ delete PROC
 
     call busca
 
-    
+    mov ah,30
+    mov 
+    mov 
     
 
     pop cx
@@ -450,15 +471,10 @@ busca PROC
     push bx
     push cx
 
-    ; lea dx,busca_msg
-    ; mov ah,09
-    ; int 21h
-
     mov indice_busc,0
     xor bx,bx
     mov cx,30
     mov ah,01
-
 @busca_while:
     int 21h
     cmp al, 13
@@ -487,10 +503,6 @@ busca PROC
     repe cmpsb
     jz @igual
 
-    mov ah,02
-    mov dl,'N'
-    int 21h
-
     inc indice_busc
 
     mov dx,n_cad
@@ -500,14 +512,16 @@ busca PROC
     jmp @sai_cmp
 
 @igual:
-    mov ah,02
     mov dx,indice_busc
-    add dx,30h
-    int 21h
-
 
 @sai_cmp:
-
+    xor bx,bx
+    mov cx,29
+    
+@zerabusca:
+    mov str_busca[bx],' '
+    inc bx
+loop @zerabusca
 
     pop cx
     pop bx
