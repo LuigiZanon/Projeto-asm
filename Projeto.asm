@@ -41,11 +41,12 @@
 
     erro db 'Nao eh possivel realizar outro cadastro pois ja ha 5 cadastros $'
 
-    edit_msg    db 10,13, 'O que voce deseja editar?'
-                db 10,13,'[1] Nota'
-                db 10,13,'[2] Nome $'
-    edit_nome_msg   db 10,13,'Qual nome voce deseja editar? $'
-    edit_erro db 'Nao ha cadastros! $'
+    edit_msg            db 10,13, 'O que voce deseja editar?'
+                        db 10,13,'[1] Nota'
+                        db 10,13,'[2] Nome $'
+    edit_nome_msg       db 10,13,'Qual nome voce deseja editar? $'
+    edit_nome_novo_msg  db 10,13,'Insira o nome novo: $'
+    edit_erro           db 'Nao ha cadastros! $'
 
 
 .code
@@ -265,15 +266,16 @@ editt PROC
     mov ah,09
     
 
-    ; cmp n_cad, 0
-    ; jne @valida_edit
+    cmp n_cad, 0
+    jne @valida_edit_n
 
-    ; mov ah,09
-    ; lea dx,edit_erro
-    ; int 21h
+    mov ah,09
+    lea dx,edit_erro
+    int 21h
 
     jmp @sai_edit
 
+@valida_edit_n:
     int 21h
     mov ah,01
 
@@ -301,6 +303,10 @@ editt PROC
     call busca
     cmp dx,1
     jne @nome
+
+    lea dx,edit_nome_novo_msg
+    mov ah,09
+    int 21h
 
     call edit_nome
 
