@@ -51,7 +51,7 @@
 
     invalido    db 10,13,'valor invalido$'
 
-    menu_pesos  db 'Digite os pesos da provas(em porcentagem %):$'
+    menu_pesos  db 'Digite os pesos da provas(em porcentagem % 0-100):$'
     peso_p1_msg db 10,13,'Peso da P1: $'
     peso_p2_msg db 10,13,'Peso da P2: $'
     peso_p3_msg db 10,13,'Peso da P3: $'
@@ -90,6 +90,31 @@ main PROC
     mov ax,@data            ;move o conteúdo do .data para ds e es
     mov ds,ax
     mov es,ax
+
+    mov ah,09
+    lea dx,menu_pesos
+    int 21h
+
+    @erro_peso:
+    lea dx,peso_p1_msg
+    int 21h
+
+    mov cx,3
+    xor bx,bx
+    @decimal:
+        ent_dec
+    loop @decimal
+
+    cmp bl,100
+    jg @erro_peso
+
+    mov peso_p1,bl
+
+    mov ah,09
+    lea dx,peso_p2_msg
+    int 21h
+    lea dx,peso_p3_msg
+    int 21h
 
 @MENU:
     mov ah,09               ;printa mensagem do menu principal
