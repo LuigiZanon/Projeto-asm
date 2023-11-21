@@ -633,6 +633,14 @@ busca PROC
     int 21h
     cmp al, 13
     je @busc_sai
+
+    cmp al,08h
+    jne @nBackspace
+    inc cx
+    dec bx
+    jmp @busca_while
+
+    @nBackspace:
     mov str_busca[bx],al
     inc bx
 
