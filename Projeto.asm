@@ -14,7 +14,7 @@
 
     n_cad   dw 0
 
-    menu    db 10,13,'Selecione a ação desejada:'
+    menu    db 10,13,'Selecione a opcao desejada:'
             db 10,13,'[1]- CADASTRAR um aluno'
             db 10,13,'[2]- CORRIGIR um cadastro'
             db 10,13,'[3]- GERAR planilha'
@@ -34,14 +34,18 @@
     busca_msg   db 'Insira o nome para busca: $'
     str_busca   db 29 dup(' ')
     indice_busc dw 0
+    erro_busca  db 'Cadastro nao encontrado! $'
     
     planilha_msg db 'Nome do aluno                P1 P2 P3 media$'
 
     erro db 'Nao eh possivel realizar outro cadastro pois ja ha 5 cadastros $'
 
-    edit_msg    db 'O que você deseja editar?'
-                db 10,13,'[1] Nota'
-                db 10,13,'[2] Nome $'
+    edit_msg            db 10,13, 'O que voce deseja editar?'
+                        db 10,13,'[1] Nota'
+                        db 10,13,'[2] Nome $'
+    edit_nome_msg       db 10,13,'Qual nome voce deseja editar? $'
+    edit_nome_novo_msg  db 10,13,'Insira o nome novo: $'
+    edit_erro           db 'Nao ha cadastros! $'
 
     edit_provas db 'Digite qual prova voce gostariade editar'
                 db 10,13,'[1]-p1'
@@ -265,15 +269,25 @@ editt PROC
     push bx
     push cx
 
-    call busca
 
     mov ah,09
     lea dx,edit_msg
     
-@valida_edit:
+
+    cmp n_cad, 0
+    jne @valida_edit_n
+
+    mov ah,09
+    lea dx,edit_erro
     int 21h
 
+    jmp @sai_edit
+
+@valida_edit_n:
+    int 21h
     mov ah,01
+
+@valida_edit:
     int 21h
 
     cmp al, '1'
@@ -282,14 +296,29 @@ editt PROC
     cmp al, '2'
     je @nome
     jmp @valida_edit
+    
+@nota:
 
-    @nome:
-        jmp @volta
-    @nota:
+    call busca
+    call edit_nota
+    jmp @sai_edit
 
-        call edit_nota
+@nome:
+    lea dx,edit_nome_msg
+    mov ah,09
+    int 21h
 
-    @volta:
+    call busca
+    cmp dx,1
+    jne @nome
+
+    lea dx,edit_nome_novo_msg
+    mov ah,09
+    int 21h
+
+    call edit_nome
+
+@sai_edit:
     pop cx
     pop bx
     pop ax
@@ -304,7 +333,34 @@ edit_nome PROC
     push bx
     push cx
 
-    
+    mov bx,indice_busc
+    mov ax,30
+
+    mul bx
+
+    mov si,ax
+    mov cx,29
+    push si
+
+@zera_nome:
+    mov alunos[si], ' '
+    inc si
+    loop @zera_nome
+
+    pop si
+    mov ah,01
+    mov cx,29
+
+@edita_nome:
+    int 21h
+    cmp al,13
+    je @sai_nome
+
+    mov alunos[si],al
+    inc si
+    loop @edita_nome
+
+@sai_nome:
 
     pop cx
     pop bx
@@ -607,10 +663,16 @@ busca PROC
     cmp indice_busc,dx
     jne @busc_cmp
     
+    lea dx, erro_busca
+    mov ah,09
+    int 21h
+
+    xor dx,dx
+
     jmp @sai_cmp
 
 @igual:
-    mov dx,indice_busc
+    mov dx,1
 
 @sai_cmp:
     xor bx,bx
@@ -619,7 +681,7 @@ busca PROC
 @zerabusca:
     mov str_busca[bx],' '
     inc bx
-loop @zerabusca
+    loop @zerabusca
 
     pop cx
     pop bx
