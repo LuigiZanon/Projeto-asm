@@ -24,9 +24,9 @@
 
     cadastro_insert db 'Diga o nome do aluno (max 29 caracteres):$'
 
-    notas_p1_insert db 'Diga a nota da p1: $'
-    notas_p2_insert db 'Diga a nota da p2: $'
-    notas_p3_insert db 'Diga a nota da p3: $'
+    notas_p1_insert db 10,13,'Diga a nota da p1: $'
+    notas_p2_insert db 10,13,'Diga a nota da p2: $'
+    notas_p3_insert db 10,13,'Diga a nota da p3: $'
 
     del_msg db 'Insira o nome do aluno que sera deletado: $'
     ;delet_vet db 30 dup
@@ -47,6 +47,8 @@
                 db 10,13,'[1]-p1'
                 db 10,13,'[2]-p2'
                 db 10,13,'[3]-p3$'
+
+    invalido    db 10,13,'valor invalido$'
 
 
 .code
@@ -159,6 +161,11 @@ cadastro PROC
         inc bx
     loop @while
 
+    @valor_inv:
+    mov ah,09
+    lea dx,invalido
+    int 21h
+
     fora:
     xor bx,bx
     mov di,n_cad
@@ -180,10 +187,11 @@ cadastro PROC
         pop bx
         add bl,al
     loop @for1
+
+    cmp bl,10
+    jg @valor_inv
     
     mov notas_p1[di],bl
-    
-    call pulalinha
 
     mov ah,09
     lea dx, notas_p2_insert
@@ -203,10 +211,11 @@ cadastro PROC
         pop bx
         add bl,al
     loop @for2
+    
+    cmp bl,10
+    ja @valor_inv
 
     mov notas_p2[di],bl
-
-    call pulalinha
 
     mov ah,09
     lea dx, notas_p3_insert
@@ -227,6 +236,9 @@ cadastro PROC
         add bl,al
     loop @for3
 
+    cmp bl,10
+    jg @valor_inv
+
     mov notas_p3[di],bl
 
     xor ax,ax
@@ -239,8 +251,6 @@ cadastro PROC
     mov medias[di],al
 
     add n_cad,1
-
-
     retorna:
     pop ax
     pop bx
@@ -279,8 +289,6 @@ editt PROC
 
         call edit_nota
 
-    
-
     @volta:
     pop cx
     pop bx
@@ -311,7 +319,33 @@ edit_nota PROC
     push ax
     push bx
     push cx
+    push di
 
+    jmp @msg_editProvas
+
+    @input_invalido:
+    mov ah,09
+    lea dx, invalido
+    int 21h
+
+    call pulalinha
+
+    @msg_editProvas:
+    mov ah,09
+    lea dx,edit_provas
+    int 21h
+
+    mov ah,01
+    int 21h
+
+    cmp al,'3'
+    je @p3
+
+    cmp al,'2'
+    je @p2
+
+    cmp al,'1'
+    jne @input_invalido
 
     mov cx,2
     mov di,indice_busc
@@ -364,8 +398,6 @@ edit_nota PROC
         loop @for_nota3
         
         mov notas_p3[di],bl
-
-        jmp @voltaProg
     
     @voltaProg:
     xor ax,ax
@@ -377,6 +409,7 @@ edit_nota PROC
     div bl
     mov medias[di],al
 
+    pop di
     pop cx
     pop bx
     pop ax
