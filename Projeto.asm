@@ -155,7 +155,7 @@ pulalinha ENDP
 cadastro PROC
 ;procedimento que adiciona um aluno ao banco de dados
     push ax
-    push bx
+    push bx                 ;salva regs na pilha
     push cx
 
     cmp n_cad,5             ;se já houver 5 cadastros retorna erro
@@ -204,62 +204,62 @@ cadastro PROC
 
     fora:
     xor bx,bx
-    mov di,n_cad                ;move o número de cadastros 
+    mov di,n_cad                ;move o número de cadastros para di (que também seria o "índice" do novo cadastro)
 
     mov ah,09
-    lea dx, notas_p1_insert
+    lea dx, notas_p1_insert     ;msg de inserção
     int 21h
 
-    mov cx,2
+    mov cx,2                    ;move 2 para o contador (número com 2 digitos)
 
     @for1:
-        ent_dec
+        ent_dec                 ;macro de entrada decimal
     loop @for1
 
-    cmp bl,10
+    cmp bl,10                   ;se o valor é maior que 10 o valor é inválido (volta para o começo do loop)
     jg @valor_inv
     
-    mov notas_p1[di],bl
+    mov notas_p1[di],bl         ;salva o valor no vetor
 
     mov ah,09
-    lea dx, notas_p2_insert
+    lea dx, notas_p2_insert     ;msg de inserção
     int 21h
 
     xor bx,bx
-    mov cx,2
+    mov cx,2                    ;contador = 2 pois serão dois digitos
 
     @for2:
-        ent_dec
+        ent_dec                 ;macro de entrada decimal
     loop @for2
     
-    cmp bl,10
+    cmp bl,10                   ;se for maior do que 10 retorna o loop + msg erro
     ja @valor_inv
 
-    mov notas_p2[di],bl
+    mov notas_p2[di],bl         ;salva valor no vetor
 
     mov ah,09
-    lea dx, notas_p3_insert
+    lea dx, notas_p3_insert     ;msg de inserção
     int 21h
 
     xor bx,bx
-    mov cx,2
+    mov cx,2                    ;contador = 2 pois serão 2 digitos
 
     @for3:
-        ent_dec
+        ent_dec                 ;entrada decimal
     loop @for3
 
-    cmp bl,10
+    cmp bl,10                   ;se valor maior que 10 = valor inválido (volta o loop)
     jg @valor_inv
 
-    mov notas_p3[di],bl
+    mov notas_p3[di],bl         ;salva valor da nota no vetor
 
-    calc_media
-    mov medias[di],al
+    calc_media                  ;chama macro de cálculo da média
+    mov medias[di],al           ;salva no vetor das médias
 
-    add n_cad,1
+    add n_cad,1                 ;por fim, já que o usuário foi cadastrado incrementa o n_cad que representa o número total de cadastros
     retorna:
     pop ax
-    pop bx
+    pop bx                      ;retorna valores aos regs
     pop cx
 
     ret
@@ -268,29 +268,27 @@ cadastro ENDP
 editt PROC
 ;procedimento que edita o cadastro
     push ax
-    push bx
+    push bx                     ;salva regs na pilha                 
     push cx
 
-
-    mov ah,09
-    lea dx,edit_msg
-    
-
-    cmp n_cad, 0
+    cmp n_cad, 0                ;se não tiver cadastros retorna erro
     jne @valida_edit_n
 
     mov ah,09
-    lea dx,edit_erro
+    lea dx,edit_erro            ;msg de erro
     int 21h
 
-    jmp @sai_edit
+    jmp @sai_edit               ;sai do procedimento
 
 @valida_edit_n:
+    mov ah,09
+    lea dx,edit_msg          ;mensagem de inserção
     int 21h
-    mov ah,01
+
+    mov ah,01           
 
 @valida_edit:
-    int 21h
+    int 21h                 ;recebe o valor do case, se '1' vai para a edição de nota, se '2' vai para a edição de nome
 
     cmp al, '1'
     je @nota
@@ -301,28 +299,31 @@ editt PROC
     
 @nota:
 
-    call busca
-    call edit_nota
-    jmp @sai_edit
+    call busca              ;chama a função de busca de string
+    cmp dx,1                ;se o booleano for '1'-> achou cadastro, se '0'-> erro
+    jne @nota
+
+    call edit_nota          ;chama a função de edição da nota
+    jmp @sai_edit           ;sai do procedimento
 
 @nome:
     lea dx,edit_nome_msg
-    mov ah,09
+    mov ah,09               ;msg de inserção do nome 
     int 21h
 
-    call busca
-    cmp dx,1
+    call busca              ;função de busca de string
+    cmp dx,1                ;se o booleano for '1'-> achou cadastro, se '0'-> erro
     jne @nome
 
     lea dx,edit_nome_novo_msg
-    mov ah,09
+    mov ah,09               ;mensagem de inserção do novo nome
     int 21h
 
-    call edit_nome
+    call edit_nome          ;função para editar o nome
 
 @sai_edit:
     pop cx
-    pop bx
+    pop bx                  ;devolve valor salvo da pilha
     pop ax
 
     ret
@@ -332,40 +333,40 @@ editt ENDP
 edit_nome PROC
 ;procedimento que edita o nome cadastrado
     push ax
-    push bx
+    push bx                 ;salva regs na pilha 
     push cx
 
-    mov bx,indice_busc
-    mov ax,30
+    mov bx,indice_busc      ;pega o 'índice' do usuário buscado
+    mov ax,30               
 
-    mul bx
+    mul bx                  ;faz a multiplicação do índice pelo número de colunas (o resultado indica a posição desejada para apontar o endereçamento
 
-    mov si,ax
-    mov cx,29
-    push si
+    mov si,ax               ;si -> aponta para o local da inserção 
+    mov cx,29               ;contador tem o número máximo de caracteres
+    push si                 ;salva si na pilha 
 
 @zera_nome:
-    mov alunos[si], ' '
+    mov alunos[si], ' '     ;loop que tem a função de limpar a linnha em que o nome será inserido
     inc si
     loop @zera_nome
 
-    pop si
+    pop si                  ;retorna valor de si
     mov ah,01
-    mov cx,29
+    mov cx,29               ;máx de 29 caracteres
 
 @edita_nome:
-    int 21h
-    cmp al,13
+    int 21h                 ;recebe o caracter
+    cmp al,13               ;<enter>? Se sim, sai
     je @sai_nome
 
-    mov alunos[si],al
-    inc si
+    mov alunos[si],al       ;salva valor na matriz
+    inc si                  ;vai passando para o próximo elemento
     loop @edita_nome
 
 @sai_nome:
 
     pop cx
-    pop bx
+    pop bx                  ;retorna os valores dos registradores
     pop ax
 
     ret
@@ -375,28 +376,28 @@ edit_nome ENDP
 edit_nota PROC
 ;procedimento que edita a nota de um aluno
     push ax
-    push bx
+    push bx                 ;salva valores dos regs na pilha
     push cx
     push di
 
-    jmp @msg_editProvas
+    jmp @msg_editProvas     ;pula a mensagem de erro
 
     @input_invalido:
     mov ah,09
-    lea dx, invalido
+    lea dx, invalido        ;msg de erro
     int 21h
 
-    call pulalinha
+    call pulalinha          ;pula linha no prompt
 
     @msg_editProvas:
     mov ah,09
-    lea dx,edit_provas
+    lea dx,edit_provas      ;msg de inserção
     int 21h
 
-    mov di,indice_busc
+    mov di,indice_busc      ;pega o índice do nome buscado
 
     mov ah,01
-    int 21h
+    int 21h                 ;case: se '1'-> p1,'2'->p2,'3'->p3
 
     cmp al,'3'
     je @p3
@@ -405,72 +406,72 @@ edit_nota PROC
     je @p2
 
     cmp al,'1'
-    jne @input_invalido
+    jne @input_invalido     ;se nenhum dos casos então é um valor inválido e volta para o início + msg_erro
 
     @p1:
-    xor bx,bx
+    xor bx,bx               ;zera registrador para caso inserir valor inválido
     mov ah,09
-    lea dx,notas_p1_insert
+    lea dx,notas_p1_insert  ;msg de inserção p1
     int 21h
 
-    mov cx,2
+    mov cx,2                ;2 digitos
     call pulalinha
     
         @for_nota:
-            ent_dec
+            ent_dec         ;entrada decimal
         loop @for_nota
         
-        cmp bl,10
+        cmp bl,10           ;se maior que 10-> erro + volta o loop
         jg @p1
         
-        mov notas_p1[di],bl
+        mov notas_p1[di],bl ;salva valor no vetor
 
         jmp @voltaProg
     
     @p2:
-    xor bx,bx
+    xor bx,bx               ;zera registador oara caso inserir valor inválido
     mov ah,09
-    lea dx,notas_p2_insert
+    lea dx,notas_p2_insert  ;msg inserção p2
     int 21h
 
-    mov cx,2
+    mov cx,2                ;2 digitos
     call pulalinha
     
         @for_nota2:
-            ent_dec
+            ent_dec         ;entrada decimal
         loop @for_nota2
 
-        cmp bl,10
+        cmp bl,10           ;se maior que 10 o valor é inválido-> volta loop + msg_erro
         jg @p2
         
-        mov notas_p2[di],bl
+        mov notas_p2[di],bl ;salva valor no vetor
 
         jmp @voltaProg
 
     @p3:
-    xor bx,bx
+    xor bx,bx               ;caso inserir valor inválido zera o registrador
     mov ah,09
-    lea dx,notas_p3_insert
+    lea dx,notas_p3_insert  ;msg de inserção p3
     int 21h
 
-    mov cx,2
+    mov cx,2                ;2 digitos
     call pulalinha
     
         @for_nota3:
-            ent_dec
+            ent_dec         ;entrada decimal
         loop @for_nota3
 
-        cmp bl,10
+        cmp bl,10           ;caso o valor seja maior que 10-> volta o loop + msg_erro
         jg @p3
         
-        mov notas_p3[di],bl
+        mov notas_p3[di],bl ;salva valor no vetor
     
     @voltaProg:
     calc_media
     mov medias[di],al
 
     pop di
-    pop cx
+    pop cx                  ;retorna valores no registrador
     pop bx
     pop ax
 
