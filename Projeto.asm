@@ -1,78 +1,108 @@
 .model small
 .stack 100h
 .data
-    alunos  db 29 dup(' '),'$'
+    alunos  db 29 dup(' '),'$'  ;vetor que armazena os cadastros dos nomes dos alunos
             db 29 dup(' '),'$'
             db 29 dup(' '),'$'
             db 29 dup(' '),'$'
             db 29 dup(' '),'$'
 
-    notas_p1  db 5 dup(?)
+    notas_p1  db 5 dup(?)       ;3 vetores que armazenam  as notas dos alunos pelas provas
     notas_p2  db 5 dup(?)
     notas_p3  db 5 dup(?)
-    medias  db 5 dup(?)
+    medias  db 5 dup(?)         ;vetor que armazena as médias de cada cadastro
 
-    n_cad   dw 0
+    n_cad   dw 0                ;local da memória que armazena o número de cadastros
 
-    menu    db 10,13,'Selecione a opcao desejada:'
+    menu    db 10,13,'Selecione a opcao desejada:'  ;mensagem do menu
             db 10,13,'[1]- CADASTRAR um aluno'
             db 10,13,'[2]- CORRIGIR um cadastro'
             db 10,13,'[3]- GERAR planilha'
             db 10,13,'[4]- ENCERRA PROGRAMA $'
 
-    pula_linha  db 10,13,'$'
+    pula_linha  db 10,13,'$'                        ;pula uma linha do prompt
 
-    cadastro_insert db 'Diga o nome do aluno (max 29 caracteres):$'
+    cadastro_insert db 'Diga o nome do aluno (max 29 caracteres):$' ;mensagem para inserir cadastro
 
-    notas_p1_insert db 10,13,'Diga a nota da p1: $'
+    notas_p1_insert db 10,13,'Diga a nota da p1: $'                 ;mensagens para inserir as nostas
     notas_p2_insert db 10,13,'Diga a nota da p2: $'
     notas_p3_insert db 10,13,'Diga a nota da p3: $'
 
-    del_msg db 'Insira o nome do aluno que sera deletado: $'
-    ;delet_vet db 30 dup
-
-    busca_msg   db 'Insira o nome para busca: $'
-    str_busca   db 29 dup(' ')
-    indice_busc dw 0
-    erro_busca  db 'Cadastro nao encontrado! $'
+    busca_msg   db 'Insira o nome para busca: $'    ;mensagem para inserir nome que será buscado
+    str_busca   db 29 dup(' ')                      ;string que armazena o nome que será buscado
+    indice_busc dw 0                                ;'indice' no nome buscado na matriz
+    erro_busca  db 'Cadastro nao encontrado! $'     ;mensagem de erro caso não tenha encontrado
     
-    planilha_msg db 'Nome do aluno                P1 P2 P3 media$'
+    planilha_msg db 'Nome do aluno                P1 P2 P3 media$'  ;cabeçalho na planilha
 
-    erro db 'Nao eh possivel realizar outro cadastro pois ja ha 5 cadastros $'
-
-    edit_msg            db 10,13, 'O que voce deseja editar?'
-                        db 10,13,'[1] Nota'
+    erro db 'Nao eh possivel realizar outro cadastro pois ja ha 5 cadastros $'  ;caso tente cadastrar mais
+                                                                                ;de 5 usuários
+    edit_msg            db 10,13, 'O que voce deseja editar?'       ;menu de edição
+                        db 10,13,'[1] Nota'                         
                         db 10,13,'[2] Nome $'
-    edit_nome_msg       db 10,13,'Qual nome voce deseja editar? $'
-    edit_nome_novo_msg  db 10,13,'Insira o nome novo: $'
-    edit_erro           db 'Nao ha cadastros! $'
+    edit_nome_msg       db 10,13,'Qual nome voce deseja editar? $'  ;mensagem para inserir o nome que será editado
+    edit_nome_novo_msg  db 10,13,'Insira o nome novo: $'            ;nome editado
+    edit_erro           db 'Nao ha cadastros! $'                    ;mensagem de erro caso não haja cadastros
 
-    edit_provas db 'Digite qual prova voce gostariade editar'
+    edit_provas db 'Digite qual prova voce gostariade editar'       ;menu da edição de notas
                 db 10,13,'[1]-p1'
                 db 10,13,'[2]-p2'
                 db 10,13,'[3]-p3$'
 
     invalido    db 10,13,'valor invalido$'
 
+    menu_pesos  db 'Digite os pesos da provas(em porcentagem %):$'
+    peso_p1_msg db 10,13,'Peso da P1: $'
+    peso_p2_msg db 10,13,'Peso da P2: $'
+    peso_p3_msg db 10,13,'Peso da P3: $'
+
+    peso_p1 db 0
+    peso_p2 db 0
+    peso_p3 db 0
+
+    ent_dec macro 
+    ;entrada decimal retornando o valor em bl
+        mov ah,01
+        int 21h
+        sub al,30h
+        xor ah,ah
+        push ax
+        mov ax,10
+        mul bx
+        pop bx
+        add bl,al
+    endm
+
+    calc_media macro
+    ;calcula a media e retorna o valor em al
+        xor ax,ax
+        mov al,notas_p1[di]
+        add al,notas_p2[di]
+        add al,notas_p3[di]
+        xor bx,bx
+        mov bl,3
+        div bl
+    endm
+
 
 .code
 main PROC
-    mov ax,@data
+    mov ax,@data            ;move o conteúdo do .data para ds e es
     mov ds,ax
     mov es,ax
 
 @MENU:
-    mov ah,09
+    mov ah,09               ;printa mensagem do menu principal
     lea dx, menu
     int 21h
 
     mov ah,01
 @INVALID:
-    call pulalinha
+    call pulalinha          ;pula uma linha do prompt
     
-    int 21h
+    int 21h                 ;recebe um caracter
 
-    cmp al,'1'
+    cmp al,'1'              ;case, se '1' chama função de cadastrar novo usuário, se '2' chama função de editar cadastro, se '3' chama função de printar planilha, se '4' e 
     je cad
 
     cmp al,'2'
@@ -81,38 +111,40 @@ main PROC
     cmp al,'3'
     je plani
 
-    cmp al,'5'
+    cmp al,'4'
     je encerra_prog
     jmp @INVALID
 
     cad:
-        call cadastro
+        call cadastro       ;função de add cadastros
         jmp @MENU
 
     edit:
-        call editt
+        call editt          ;função de editar cadastros
         jmp @MENU
 
     plani:
-        call print_nomes
+        call print_nomes    ;função de imprimir planilha
         jmp @MENU
 
         
 encerra_prog:
-    mov ah,4ch
+    mov ah,4ch              ;encerra programa
     int 21h
 main ENDP
 
 pulalinha PROC
 ;procedimento que pula para linha de baixo juntamente com o cr
 
-    push ax
+    push ax                 ;salva registradores
     push dx
+    push cx
 
     mov ah,09
     lea dx, pula_linha          ;10,13 (LF,CR)
     int 21h
 
+    pop cx                  ;retorna valores aos registradores
     pop dx
     pop ax
 
@@ -126,18 +158,18 @@ cadastro PROC
     push bx
     push cx
 
-    cmp n_cad,5
+    cmp n_cad,5             ;se já houver 5 cadastros retorna erro
     jnge @cad
 
     mov ah,09
-    lea dx,erro
+    lea dx,erro             ;msg de erro
     int 21h
 
     jmp retorna
 
     @cad:
     mov ah,09
-    lea dx, cadastro_insert
+    lea dx, cadastro_insert     ;msg para inserção de cadastros
     int 21h
     
     mov cx,30                   ;número maximo de caracteres que o nome pode ter +1 (max 29)
@@ -145,7 +177,7 @@ cadastro PROC
     mov ax,30                   ;
     mul n_cad                   ;multipla a quantidade de nomes cadastrados por 30 (num de colunas na matriz nomes) para não sobreescrever os nomes ja cadastrados
 
-    mov bx,ax
+    mov bx,ax                   ;move o resultado para bx (sendo bx a linha de cadastro correspondente a próxima linha livre para não sobreescrever)
     mov ah,01
 
     @while:
@@ -153,7 +185,7 @@ cadastro PROC
         cmp al,13                                   ;al,13?
         je fora                                     ;sim, pula para 'fora'
 
-        cmp al,08h
+        cmp al,08h              ;backspace? Se sim incrementa contador para desconsiderar o valor e decrementa bx para voltar no vetor
         jne diferente
 
         inc cx
@@ -161,18 +193,18 @@ cadastro PROC
         jmp @while
 
         diferente:
-        mov alunos[bx],al
-        inc bx
+        mov alunos[bx],al       ;armazena valor na matriz
+        inc bx                  ;passa para o próximo elemento
     loop @while
 
     @valor_inv:
     mov ah,09
-    lea dx,invalido
+    lea dx,invalido             ;msg de valor inválido
     int 21h
 
     fora:
     xor bx,bx
-    mov di,n_cad
+    mov di,n_cad                ;move o número de cadastros 
 
     mov ah,09
     lea dx, notas_p1_insert
@@ -181,15 +213,7 @@ cadastro PROC
     mov cx,2
 
     @for1:
-        mov ah,01
-        int 21h
-        sub al,30h
-        xor ah,ah
-        push ax
-        mov ax,10
-        mul bx
-        pop bx
-        add bl,al
+        ent_dec
     loop @for1
 
     cmp bl,10
@@ -205,15 +229,7 @@ cadastro PROC
     mov cx,2
 
     @for2:
-        mov ah,01
-        int 21h
-        sub al,30h
-        xor ah,ah
-        push ax
-        mov ax,10
-        mul bx
-        pop bx
-        add bl,al
+        ent_dec
     loop @for2
     
     cmp bl,10
@@ -229,15 +245,7 @@ cadastro PROC
     mov cx,2
 
     @for3:
-        mov ah,01
-        int 21h
-        sub al,30h
-        xor ah,ah
-        push ax
-        mov ax,10
-        mul bx
-        pop bx
-        add bl,al
+        ent_dec
     loop @for3
 
     cmp bl,10
@@ -245,13 +253,7 @@ cadastro PROC
 
     mov notas_p3[di],bl
 
-    xor ax,ax
-    mov al,notas_p1[di]
-    add al,notas_p2[di]
-    add al,notas_p3[di]
-    xor bx,bx
-    mov bl,3
-    div bl
+    calc_media
     mov medias[di],al
 
     add n_cad,1
@@ -406,20 +408,18 @@ edit_nota PROC
     jne @input_invalido
 
     @p1:
+    xor bx,bx
+    mov ah,09
+    lea dx,notas_p1_insert
+    int 21h
+
     mov cx,2
     call pulalinha
+    
         @for_nota:
-            mov ah,01
-            int 21h
-            sub al,30h
-            xor ah,ah
-            push ax
-            mov ax,10
-            mul bx
-            pop bx
-            add bl,al
+            ent_dec
         loop @for_nota
-
+        
         cmp bl,10
         jg @p1
         
@@ -428,18 +428,16 @@ edit_nota PROC
         jmp @voltaProg
     
     @p2:
+    xor bx,bx
+    mov ah,09
+    lea dx,notas_p2_insert
+    int 21h
+
     mov cx,2
     call pulalinha
+    
         @for_nota2:
-            mov ah,01
-            int 21h
-            sub al,30h
-            xor ah,ah
-            push ax
-            mov ax,10
-            mul bx
-            pop bx
-            add bl,al
+            ent_dec
         loop @for_nota2
 
         cmp bl,10
@@ -450,18 +448,16 @@ edit_nota PROC
         jmp @voltaProg
 
     @p3:
+    xor bx,bx
+    mov ah,09
+    lea dx,notas_p3_insert
+    int 21h
+
     mov cx,2
     call pulalinha
+    
         @for_nota3:
-            mov ah,01
-            int 21h
-            sub al,30h
-            xor ah,ah
-            push ax
-            mov ax,10
-            mul bx
-            pop bx
-            add bl,al
+            ent_dec
         loop @for_nota3
 
         cmp bl,10
@@ -470,13 +466,7 @@ edit_nota PROC
         mov notas_p3[di],bl
     
     @voltaProg:
-    xor ax,ax
-    mov al,notas_p1[di]
-    add al,notas_p2[di]
-    add al,notas_p3[di]
-    xor bx,bx
-    mov bl,3
-    div bl
+    calc_media
     mov medias[di],al
 
     pop di
@@ -533,82 +523,34 @@ print_nomes ENDP
 
 print_notas proc
 
-        mov si,10
         xor ax,ax
         mov al,notas_p1[bx]
-        mov cx,2
-        @loop1:
-            xor dx,dx
-            div si
-            push dx
-        loop @loop1
 
-        mov ah,02
-        mov cx,2
-        @print:
-            pop dx
-            add dl,30h
-            int 21h
-        loop @print
+        call sai_dec
 
         mov dl,20h
         int 21h
 
         xor ax,ax
         mov al,notas_p2[bx]
-        mov cx,2
-        @loop2:
-            xor dx,dx
-            div si
-            push dx
-        loop @loop2
 
-        mov ah,02
-        mov cx,2
-        @print2:
-            pop dx
-            add dl,30h
-            int 21h
-        loop @print2
+        call sai_dec
 
         mov dl,20h
         int 21h
 
         xor ax,ax
         mov al,notas_p3[bx]
-        mov cx,2
-        @loop3:
-            xor dx,dx
-            div si
-            push dx
-        loop @loop3
 
-        mov ah,02
-        mov cx,2
-        @print3:
-            pop dx
-            add dl,30h
-            int 21h
-        loop @print3
+        call sai_dec
+
         mov dl,20h
         int 21h
 
         xor ax,ax
         mov al,medias[bx]
-        mov cx,2
-        @loop4:
-            xor dx,dx
-            div si
-            push dx
-        loop @loop4
 
-        mov ah,02
-        mov cx,2
-        @print4:
-            pop dx
-            add dl,30h
-            int 21h
-        loop @print4
+        call sai_dec 
 
         ret
 print_notas endp
@@ -689,6 +631,7 @@ busca PROC
 @zerabusca:
     mov str_busca[bx],' '
     inc bx
+
     loop @zerabusca
 
     pop cx
@@ -697,4 +640,25 @@ busca PROC
 
     ret
 busca ENDP
+sai_dec proc
+;sai decimal no dispositivo padrão
+;al deve conter o valor que sera impresso
+
+    mov si,10
+    mov cx,2
+    @loop1:
+        xor dx,dx
+        div si
+        push dx
+    loop @loop1
+    mov ah,02
+    mov cx,2
+    @print:
+        pop dx
+        add dl,30h
+        int 21h
+    loop @print
+
+    ret
+sai_dec endp
 end main
