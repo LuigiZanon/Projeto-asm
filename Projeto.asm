@@ -277,10 +277,10 @@ editt PROC
     int 21h
 
     cmp al, '1'
-    je @nome
+    je @nota
 
     cmp al, '2'
-    je @nota
+    je @nome
     jmp @valida_edit
 
     @nome:
@@ -335,6 +335,8 @@ edit_nota PROC
     lea dx,edit_provas
     int 21h
 
+    mov di,indice_busc
+
     mov ah,01
     int 21h
 
@@ -347,10 +349,9 @@ edit_nota PROC
     cmp al,'1'
     jne @input_invalido
 
-    mov cx,2
-    mov di,indice_busc
-
     @p1:
+    mov cx,2
+    call pulalinha
         @for_nota:
             mov ah,01
             int 21h
@@ -362,12 +363,17 @@ edit_nota PROC
             pop bx
             add bl,al
         loop @for_nota
+
+        cmp bl,10
+        jg @p1
         
         mov notas_p1[di],bl
 
         jmp @voltaProg
     
     @p2:
+    mov cx,2
+    call pulalinha
         @for_nota2:
             mov ah,01
             int 21h
@@ -379,12 +385,17 @@ edit_nota PROC
             pop bx
             add bl,al
         loop @for_nota2
+
+        cmp bl,10
+        jg @p2
         
         mov notas_p2[di],bl
 
         jmp @voltaProg
 
     @p3:
+    mov cx,2
+    call pulalinha
         @for_nota3:
             mov ah,01
             int 21h
@@ -396,6 +407,9 @@ edit_nota PROC
             pop bx
             add bl,al
         loop @for_nota3
+
+        cmp bl,10
+        jg @p3
         
         mov notas_p3[di],bl
     
