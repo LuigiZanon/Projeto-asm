@@ -103,11 +103,11 @@ main PROC
     
     int 21h                 ;recebe um caracter
 
-    cmp al,'1'              ;case, se '1' chama função de cadastrar novo usuário, se '2' chama função de editar cadastro, se '3' chama função de printar planilha, se '4' e 
-    je cad
-
-    cmp al,'2'
-    je edit
+    cmp al,'1'              ;case, se '1' chama função de cadastrar novo usuário,
+    je cad                  ;se '2' chama função de editar cadastro, 
+                            ;se '3' chama função de printar planilha,
+    cmp al,'2'              ;se '4' chama a função para editar os pesos
+    je edit                 ;se '5' finaliza o programa
 
     cmp al,'3'
     je plani
@@ -382,8 +382,8 @@ edit_nome PROC
     cmp al,13               ;<enter>? Se sim, sai
     je @sai_nome
 
-    cmp al,08h
-    jne @n_Backspace
+    cmp al,08h              ;compara al com o backspace
+    jne @n_Backspace        ;se for continua, caso contrario pula para @n_Backspace
 
     dec si
     inc cx
