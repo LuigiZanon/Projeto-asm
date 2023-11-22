@@ -156,7 +156,6 @@ pulalinha PROC
     pop ax
 
     ret
-    
 pulalinha ENDP
 
 cadastro PROC
@@ -383,6 +382,14 @@ edit_nome PROC
     cmp al,13               ;<enter>? Se sim, sai
     je @sai_nome
 
+    cmp al,08h
+    jne @n_Backspace
+
+    dec si
+    inc cx
+    jmp @edita_nome
+
+    @n_Backspace:
     mov alunos[si],al       ;salva valor na matriz
     inc si                  ;vai passando para o próximo elemento
     loop @edita_nome
